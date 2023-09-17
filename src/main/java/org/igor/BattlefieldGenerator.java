@@ -13,8 +13,10 @@ public class BattlefieldGenerator {
     int[][] battlefield;
 
     public int[][] generateBattlefield() {
-        battlefield = createEmptyBattlefield();
-        placeAllShips();
+        do {
+            battlefield = createEmptyBattlefield();
+            placeAllShips();
+        } while (getShipCellsAmount(battlefield) < 20);
         return battlefield;
     }
 
@@ -109,6 +111,18 @@ public class BattlefieldGenerator {
             return true;
         } //  bot left
         else return point.x > 0 && point.y > 0 && battlefield[point.x - 1][point.y - 1] == SHIP_CELL;
+    }
+
+    private int getShipCellsAmount(int[][] battlefieldToShoot) {
+        int counter = 0;
+        for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
+            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
+                if (battlefieldToShoot[i][j] == SHIP_CELL) {
+                    counter++;
+                }
+            }
+        }
+        return counter;
     }
 
 }
