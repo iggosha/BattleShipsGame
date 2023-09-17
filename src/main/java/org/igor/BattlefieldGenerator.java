@@ -6,17 +6,17 @@ import java.util.Collections;
 import java.util.List;
 import java.awt.Point;
 
-import static org.igor.BattleshipsGame.*;
+import static org.igor.CoordinateConstants.*;
 
 public class BattlefieldGenerator {
 
     int[][] battlefield;
 
-    public int[][] generateBattlefield() {
+    public int[][] generateBattlefield(BattleshipsGame game) {
         do {
             battlefield = createEmptyBattlefield();
             placeAllShips();
-        } while (getShipCellsAmount(battlefield) < 20);
+        } while (game.getShipCellsAmount(battlefield) < 20);
         return battlefield;
     }
 
@@ -48,8 +48,8 @@ public class BattlefieldGenerator {
                 if (startHoriz == 0) {
                     startHoriz += (int) Math.round(Math.random());
                 }
-                Point point = new Point(startVert, startHoriz);
-                if (isValidForPlacing(point, ship)) {
+                Point coordinate = new Point(startVert, startHoriz);
+                if (isValidForPlacing(coordinate, ship)) {
                     if (ship.isVertical()) {
                         for (int i = startVert; i < startVert + ship.getLength(); i++) {
                             battlefield[i][startHoriz] = SHIP_CELL;
@@ -65,16 +65,16 @@ public class BattlefieldGenerator {
         }
     }
 
-    private boolean isValidForPlacing(Point point, Ship ship) {
+    private boolean isValidForPlacing(Point coordinate, Ship ship) {
         if (ship.isVertical()) {
-            for (int i = point.x; i < point.x + ship.getLength(); i++) {
-                if (i > 9 || hasShipNear(new Point(i, point.y))) {
+            for (int i = coordinate.x; i < coordinate.x + ship.getLength(); i++) {
+                if (i > 9 || hasShipNear(new Point(i, coordinate.y))) {
                     return false;
                 }
             }
         } else {
-            for (int i = point.y; i < point.y + ship.getLength(); i++) {
-                if (i > 9 || hasShipNear(new Point(point.x, i))) {
+            for (int i = coordinate.y; i < coordinate.y + ship.getLength(); i++) {
+                if (i > 9 || hasShipNear(new Point(coordinate.x, i))) {
                     return false;
                 }
             }
@@ -82,47 +82,36 @@ public class BattlefieldGenerator {
         return true;
     }
 
-    private boolean hasShipNear(Point point) throws IndexOutOfBoundsException {
+    private boolean hasShipNear(Point coordinate) throws IndexOutOfBoundsException {
         // current
-        if (battlefield[point.x][point.y] == SHIP_CELL) {
+        if (battlefield[coordinate.x][coordinate.y] == SHIP_CELL) {
             return true;
         }
         //  right
-        else if (point.x < BATTLEFIELD_SIZE - 1 && battlefield[point.x + 1][point.y] == SHIP_CELL) {
+        else if (coordinate.x < BATTLEFIELD_SIZE - 1 && battlefield[coordinate.x + 1][coordinate.y] == SHIP_CELL) {
             return true;
         } //left
-        else if (point.x > 0 && battlefield[point.x - 1][point.y] == SHIP_CELL) {
+        else if (coordinate.x > 0 && battlefield[coordinate.x - 1][coordinate.y] == SHIP_CELL) {
             return true;
         }
         // top
-        else if (point.y < BATTLEFIELD_SIZE - 1 && battlefield[point.x][point.y + 1] == SHIP_CELL) {
+        else if (coordinate.y < BATTLEFIELD_SIZE - 1 && battlefield[coordinate.x][coordinate.y + 1] == SHIP_CELL) {
             return true;
         } // bot
-        else if (point.y > 0 && battlefield[point.x][point.y - 1] == SHIP_CELL) {
+        else if (coordinate.y > 0 && battlefield[coordinate.x][coordinate.y - 1] == SHIP_CELL) {
             return true;
         } // top right
-        else if (point.y < BATTLEFIELD_SIZE - 1 && point.x < BATTLEFIELD_SIZE - 1 && battlefield[point.x + 1][point.y + 1] == SHIP_CELL) {
+        else if (coordinate.y < BATTLEFIELD_SIZE - 1 && coordinate.x < BATTLEFIELD_SIZE - 1 && battlefield[coordinate.x + 1][coordinate.y + 1] == SHIP_CELL) {
             return true;
         } // bot right
-        else if (point.x < BATTLEFIELD_SIZE - 1 && point.y > 0 && battlefield[point.x + 1][point.y - 1] == SHIP_CELL) {
+        else if (coordinate.x < BATTLEFIELD_SIZE - 1 && coordinate.y > 0 && battlefield[coordinate.x + 1][coordinate.y - 1] == SHIP_CELL) {
             return true;
         } // top left
-        else if (point.x > 0 && point.y < BATTLEFIELD_SIZE - 1 && battlefield[point.x - 1][point.y + 1] == SHIP_CELL) {
+        else if (coordinate.x > 0 && coordinate.y < BATTLEFIELD_SIZE - 1 && battlefield[coordinate.x - 1][coordinate.y + 1] == SHIP_CELL) {
             return true;
         } //  bot left
-        else return point.x > 0 && point.y > 0 && battlefield[point.x - 1][point.y - 1] == SHIP_CELL;
-    }
-
-    private int getShipCellsAmount(int[][] battlefieldToShoot) {
-        int counter = 0;
-        for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
-            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
-                if (battlefieldToShoot[i][j] == SHIP_CELL) {
-                    counter++;
-                }
-            }
-        }
-        return counter;
+        else
+            return coordinate.x > 0 && coordinate.y > 0 && battlefield[coordinate.x - 1][coordinate.y - 1] == SHIP_CELL;
     }
 
 }

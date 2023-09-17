@@ -3,34 +3,39 @@ package org.igor;
 import java.awt.Point;
 import java.util.Scanner;
 
-import static org.igor.BattleshipsGame.*;
+import static org.igor.CoordinateConstants.*;
 
 public class BattlefieldModifier {
 
     public void startTurns(BattleshipsGame game) {
         while (hasAnyShips(game)) {
             game.printAllyAndEnemyBattlefields();
-            Point coordinate = getCoordinateToShoot(getCoordinateInput());
             try {
+                Point coordinate = getCoordinateToShoot(getCoordinateInput());
                 if (isAbleToShoot(game.enemyBattlefield, coordinate)) {
-                    shoot(game.enemyBattlefield, game.enemyBattlefieldToPrint, coordinate);
+                    shootByPlayer(game, coordinate);
                 } else {
-                    throw new IllegalArgumentException("Клетка " + coordinate.y + ", "+ coordinate.x + " недоступна для выстрела");
+                    throw new IllegalArgumentException("Клетка недоступна для выстрела");
                 }
             } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
+                System.err.flush();
             }
         }
-    }
-
-    public Point getCoordinateToShoot(String coordinate) {
-        return new Point(coordinate.toUpperCase().charAt(0) - 'А', coordinate.charAt(1) - '0');
     }
 
     public String getCoordinateInput() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Введите координату для выстрела: ");
         return scanner.nextLine();
+    }
+
+    public Point getCoordinateToShoot(String coordinate) throws IllegalArgumentException {
+        try {
+            return new Point(coordinate.toUpperCase().charAt(0) - 'А', coordinate.charAt(1) - '0');
+        } catch (StringIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("Неверно введена точка для выстрела");
+        }
     }
 
     public boolean isAbleToShoot(int[][] battlefield, Point coordinate) {
@@ -46,29 +51,54 @@ public class BattlefieldModifier {
         return true;
     }
 
-    public void shoot(int[][] battlefieldToShoot, int[][] battlefieldToShow, Point coordinate) {
-        if (battlefieldToShoot[coordinate.y][coordinate.x] == SHIP_CELL) {
-            battlefieldToShoot[coordinate.y][coordinate.x] = DESTROYED_CELL;
-            battlefieldToShow[coordinate.y][coordinate.x] = DESTROYED_CELL;
+    public void shootByPlayer(BattleshipsGame game, Point coordinate) {
+        if (game.enemyBattlefield[coordinate.y][coordinate.x] == SHIP_CELL) {
+            game.enemyBattlefield[coordinate.y][coordinate.x] = DESTROYED_CELL;
+            game.enemyBattlefieldToPrint[coordinate.y][coordinate.x] = DESTROYED_CELL;
+            System.out.println(ANSI_GREEN + "Есть попадание!" + ANSI_RESET);
         } else {
-            battlefieldToShoot[coordinate.y][coordinate.x] = SHOT_CELL;
-            battlefieldToShow[coordinate.y][coordinate.x] = SHOT_CELL;
+            game.enemyBattlefield[coordinate.y][coordinate.x] = SHOT_CELL;
+            game.enemyBattlefieldToPrint[coordinate.y][coordinate.x] = SHOT_CELL;
+            System.out.println(ANSI_RED +"Промах!" + ANSI_RESET);
+            waitAfterShot();
+            shootByComputer(game);
+        }
+    }
+
+    public void shootByComputer(BattleshipsGame game) {
+        for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
+            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
+                if (j > 0 && game.allyBattlefield[i][j - 1] == DESTROYED_CELL && game.allyBattlefield[i][j] == EMPTY_CELL) {
+                    continue;
+                }
+                Point coordinate = new Point(j, i);
+                if (isAbleToShoot(game.allyBattlefield, coordinate)) {
+                    if (game.allyBattlefield[coordinate.y][coordinate.x] == SHIP_CELL) {
+                        game.allyBattlefield[coordinate.y][coordinate.x] = DESTROYED_CELL;
+                        System.out.println(ANSI_BLUE + "Компьютер:" + ANSI_RED +" попал в корабль в точке "
+                                + (char) ((int) 'А' + coordinate.x) + coordinate.y + ANSI_RESET);
+                        waitAfterShot();
+                    } else {
+                        game.allyBattlefield[coordinate.y][coordinate.x] = SHOT_CELL;
+                        System.out.println(ANSI_BLUE + "Компьютер: " + ANSI_GREEN +  "промахнулся, выстрелив в точку " +
+                                (char) ((int) 'А' + coordinate.x) + coordinate.y + ANSI_RESET);
+                        waitAfterShot();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private void waitAfterShot() {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public boolean hasAnyShips(BattleshipsGame game) {
-        return getShipCellsAmount(game.allyBattlefield) > 0 && getShipCellsAmount(game.enemyBattlefield) > 0;
-    }
-
-    private int getShipCellsAmount(int[][] battlefieldToShoot) {
-        int counter = 0;
-        for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
-            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
-                if (battlefieldToShoot[i][j] == SHIP_CELL) {
-                    counter++;
-                }
-            }
-        }
-        return counter;
+        return game.getShipCellsAmount(game.allyBattlefield) > 0 && game.getShipCellsAmount(game.enemyBattlefield) > 0;
     }
 }

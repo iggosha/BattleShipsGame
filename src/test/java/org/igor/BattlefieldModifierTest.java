@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 
+import static org.igor.CoordinateConstants.*;
+
+
 class BattlefieldModifierTest {
 
     static int counterLetter = 0;
@@ -20,7 +23,11 @@ class BattlefieldModifierTest {
             if (coordinate.y >= 10) return;
             try {
                 if (battlefieldModifier.isAbleToShoot(game.enemyBattlefield, coordinate)) {
-                    battlefieldModifier.shoot(game.enemyBattlefield, game.enemyBattlefieldToPrint, coordinate);
+                    if (coordinate.x > 0 && game.enemyBattlefield[coordinate.y][coordinate.x - 1] == DESTROYED_CELL
+                            && game.enemyBattlefield[coordinate.y][coordinate.x] == EMPTY_CELL) {
+                        continue;
+                    }
+                    battlefieldModifier.shootByPlayer(game, coordinate);
                 } else {
                     throw new IllegalArgumentException("Клетка " + coordinate.y + ", " + coordinate.x + " недоступна для выстрела");
                 }

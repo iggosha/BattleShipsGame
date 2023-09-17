@@ -1,13 +1,9 @@
 package org.igor;
 
+import static org.igor.CoordinateConstants.*;
+
 public class BattleshipsGame {
 
-    // 0 - empty, 1 - ship (part), -1 - destroyed
-    public static final int BATTLEFIELD_SIZE = 10;
-    public static final int EMPTY_CELL = 0;
-    public static final int SHIP_CELL = 11;
-    public static final int DESTROYED_CELL = -1;
-    public static final int SHOT_CELL = 8;
 
     public int[][] allyBattlefield;
     public int[][] enemyBattlefield;
@@ -23,8 +19,8 @@ public class BattleshipsGame {
 
     public void startGame() {
         BattlefieldGenerator battlefieldGenerator = new BattlefieldGenerator();
-        allyBattlefield = battlefieldGenerator.generateBattlefield();
-        enemyBattlefield = battlefieldGenerator.generateBattlefield();
+        allyBattlefield = battlefieldGenerator.generateBattlefield(this);
+        enemyBattlefield = battlefieldGenerator.generateBattlefield(this);
         enemyBattlefieldToPrint = battlefieldGenerator.createEmptyBattlefield();
         System.out.println("Игра началась");
     }
@@ -38,13 +34,24 @@ public class BattleshipsGame {
         printAllyAndEnemyBattlefields();
         System.out.println("Игра окончена");
         if (getShipCellsAmount(allyBattlefield) == 0) {
-            System.out.println("Вы проиграли!");
+            System.out.println(ANSI_RED + "Вы проиграли!");
         } else {
-            System.out.println("Вы победили!");
+            System.out.println(ANSI_GREEN + "Вы победили!");
         }
     }
 
     public void printAllyAndEnemyBattlefields() {
+        printCoordinateLetters();
+        for (int currentString = 0; currentString < BATTLEFIELD_SIZE; currentString++) {
+            printBattlefield(this.allyBattlefield, currentString);
+            printBattlefield(this.enemyBattlefieldToPrint, currentString);
+            System.out.println();
+        }
+        System.out.println("Палуб кораблей на вашем поле: " + getShipCellsAmount(allyBattlefield) +
+                "           Палуб кораблей на поле противника: " + getShipCellsAmount(enemyBattlefield));
+    }
+
+    private void printCoordinateLetters() {
         System.out.printf("%-50s", "        Ваше поле:");
         System.out.printf("%-50s\n", "Поле противника:");
         for (int j = 0; j < 2; j++) {
@@ -53,26 +60,27 @@ public class BattleshipsGame {
                 System.out.print(i + " |");
             }
             System.out.printf("%-10s", "");
-
         }
         System.out.println();
-        for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
-            System.out.print(i + " |");
-            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
-                System.out.printf("%-2s|", allyBattlefield[i][j]);
-            }
-            System.out.printf("%-10s", "");
-            System.out.print(i + " |");
-            for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
-                System.out.printf("%-2s|", enemyBattlefieldToPrint[i][j]);
-            }
-            System.out.println();
-        }
-        System.out.println("Палуб кораблей на вашем поле: " + getShipCellsAmount(allyBattlefield) +
-                "           Палуб кораблей на поле противника: " + getShipCellsAmount(enemyBattlefield));
     }
 
-    private int getShipCellsAmount(int[][] battlefieldToShoot) {
+    private void printBattlefield(int[][] battlefield, int currentString) {
+        System.out.print(currentString + " |");
+        for (int currentColumn = 0; currentColumn < BATTLEFIELD_SIZE; currentColumn++) {
+            if (battlefield[currentString][currentColumn] == SHIP_CELL) {
+                System.out.printf(ANSI_BLUE + "%-2s|" + ANSI_RESET, battlefield[currentString][currentColumn]);
+            } else if (battlefield[currentString][currentColumn] == DESTROYED_CELL) {
+                System.out.printf(ANSI_RED + "%-2s|" + ANSI_RESET, battlefield[currentString][currentColumn]);
+            } else if (battlefield[currentString][currentColumn] == EMPTY_CELL) {
+                System.out.printf(ANSI_GREEN + "%-2s|" + ANSI_RESET, battlefield[currentString][currentColumn]);
+            } else {
+                System.out.printf("%-2s|", battlefield[currentString][currentColumn]);
+            }
+        }
+        System.out.printf("%-10s", "");
+    }
+
+    public int getShipCellsAmount(int[][] battlefieldToShoot) {
         int counter = 0;
         for (int i = 0; i < BATTLEFIELD_SIZE; i++) {
             for (int j = 0; j < BATTLEFIELD_SIZE; j++) {
